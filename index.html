@@ -140,11 +140,10 @@ table.sched{width:100%;border-collapse:collapse;table-layout:fixed;background:#f
   <section class="panel on" id="p1">
     <div class="box">
       <h2>חיבור ליומן</h2>
-      <p>לוחצים פעם אחת על "ליומן של גוגל" או על "לאייפון ולמק", וכל האירועים של הכיתה נכנסים ליומן. מאותו רגע, כל אירוע שמישהו מוסיף או משנה כאן יופיע ביומן שלכם לבד, בלי ללחוץ שוב (בגוגל זה יכול לקחת כמה שעות). "הורדת קובץ" היא עותק חד פעמי שלא מתעדכן.</p>
+      <p>לוחצים פעם אחת על "ליומן של גוגל" או על "לאייפון ולמק", וכל האירועים של הכיתה נכנסים ליומן. מאותו רגע, כל אירוע שמישהו מוסיף או משנה כאן יופיע ביומן שלכם לבד, בלי ללחוץ שוב (בגוגל זה יכול לקחת כמה שעות).</p>
       <div class="btns">
         <a class="btn b-pink" id="calGoogle" target="_blank" rel="noopener">ליומן של גוגל</a>
         <a class="btn b-sky" id="calApple">לאייפון ולמק</a>
-        <a class="btn b-soft" id="calFile">הורדת קובץ</a>
       </div>
     </div>
 
@@ -253,7 +252,6 @@ if (location.hash === '#schedule') document.getElementById('t3').click();
 var icsUrl = API + '?action=ics';
 $('calApple').href = icsUrl.replace(/^https:/, 'webcal:');
 $('calGoogle').href = 'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent(icsUrl.replace(/^https:/, 'webcal:'));
-$('calFile').href = icsUrl;
 
 // events
 var KIDS = [], ITEMS = [];
