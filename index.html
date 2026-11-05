@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>כיתה א׳1 | ימי הולדת ודף קשר</title>
+<title>כיתה א׳1 | אירועי כיתה</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -126,13 +126,13 @@ table.sched{width:100%;border-collapse:collapse;table-layout:fixed;background:#f
   <header>
     <div class="hero">
       <img src="art/balloons.png" alt="">
-      <div class="ttl"><h1>כיתה א׳1</h1><p class="sub">ימי הולדת ודף קשר של ההורים</p></div>
+      <div class="ttl"><h1>כיתה א׳1</h1><p class="sub">אירועי כיתה, דף קשר ומערכת שעות</p></div>
       <img class="mid" src="art/kids.png" alt="">
     </div>
     <div class="dots"></div>
   </header>
   <div class="tabs" role="tablist">
-    <button class="tab" role="tab" id="t1" aria-selected="true" data-p="p1">ימי הולדת</button>
+    <button class="tab" role="tab" id="t1" aria-selected="true" data-p="p1">אירועי כיתה</button>
     <button class="tab" role="tab" id="t2" aria-selected="false" data-p="p2">דף קשר</button>
     <button class="tab" role="tab" id="t3" aria-selected="false" data-p="p3">מערכת שעות</button>
   </div>
@@ -439,10 +439,16 @@ function pcell(role, name, phone) {
   }
   c.appendChild(n); return c;
 }
+function famFirst(n) {
+  var w = String(n || '').trim().split(/\s+/);
+  if (w.length < 2) return w.join(' ');
+  var k = (w.length >= 3 && w[w.length - 2] === 'בן') ? 2 : 1;
+  return w.slice(w.length - k).join(' ') + ' ' + w.slice(0, w.length - k).join(' ');
+}
 function renderContacts() {
   var q = $('q').value.trim(), box = $('clist'); box.textContent = '';
-  CONTACTS.filter(function (c) { return !q || (c.name + ' ' + c.mom + ' ' + c.dad + ' ' + c.momPhone + ' ' + c.dadPhone).indexOf(q) >= 0; }).forEach(function (c) {
-    var k = el('div', 'ccard'); k.appendChild(el('div', 'who', c.name));
+  CONTACTS.slice().sort(function (a, b) { return famFirst(a.name).localeCompare(famFirst(b.name), 'he'); }).filter(function (c) { return !q || (c.name + ' ' + c.mom + ' ' + c.dad + ' ' + c.momPhone + ' ' + c.dadPhone).indexOf(q) >= 0; }).forEach(function (c) {
+    var k = el('div', 'ccard'); k.appendChild(el('div', 'who', famFirst(c.name)));
     var g = el('div', 'pgrid'); g.appendChild(pcell('אמא', c.mom, c.momPhone)); g.appendChild(pcell('אבא', c.dad, c.dadPhone)); k.appendChild(g);
     box.appendChild(k);
   });
@@ -458,7 +464,7 @@ function loadContacts() {
   }).catch(function () { $('clist').appendChild(el('div', 'empty', 'לא הצלחנו לטעון. נסו לרענן את הדף.')); });
 }
 $('q').addEventListener('input', renderContacts);
-if (location.hash === '#contacts') loadContacts();
+loadContacts();
 </script>
 </body>
 </html>
