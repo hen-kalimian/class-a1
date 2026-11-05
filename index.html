@@ -101,6 +101,24 @@ details.card.past{padding:8px 14px}
 .psum .who{font-size:16px;flex:1}
 .psum .pd{color:var(--muted);font-size:14px}
 details.card.past[open] .cbody{margin-top:8px;display:grid;gap:6px}
+.tab{font-size:15px;padding:11px 4px}
+.sch{padding:14px 10px}
+.schhead{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px}
+.schhead h2{margin:0;font-size:20px}.schhead p{margin:2px 0 0;text-align:center}
+.schhead img{height:62px;width:auto}
+.schhead>div{text-align:center}
+.tblwrap{overflow:hidden;border-radius:16px;border:2px solid var(--pink2)}
+table.sched{width:100%;border-collapse:collapse;table-layout:fixed;background:#fff}
+.sched th,.sched td{border:1px solid #fff;text-align:center;padding:7px 2px;font-size:13px;line-height:1.25;height:50px;word-break:break-word;hyphens:auto}
+.sched thead th{background:var(--pink);color:var(--deep);font-size:13px;font-weight:800;height:40px}
+.sched th.hr{width:34px;background:var(--pink2);color:var(--deep);font-weight:800}
+.sched td{font-weight:500;color:var(--text)}
+.c-lang{background:#DDEEFB}.c-math{background:#CDEFE2}.c-sci{background:#FFF3C9}.c-art{background:#F1E4FA}
+.c-pe{background:#FDE1EA}.c-gold{background:#FFE6B8}.c-heart{background:#FFD9E3}.c-empty{background:#FAF7FA}
+.sched .today{box-shadow:inset 0 0 0 3px var(--fuchsia)}
+.sched thead th.today{background:var(--fuchsia);color:#fff;box-shadow:none}
+.palette{display:block;height:54px;width:auto;margin:10px auto 0}
+@media (max-width:420px){.sched td.long{font-size:10px;letter-spacing:-.2px;word-break:normal;overflow-wrap:normal;padding-inline:0}.sch{padding:12px 4px}.sched th,.sched td{font-size:11.5px;padding:5px 1px;height:46px}.sched thead th{font-size:11.5px}.sched th.hr{width:28px}.schhead img{height:50px}.schhead h2{font-size:18px}}
 </style>
 </head>
 <body>
@@ -116,6 +134,7 @@ details.card.past[open] .cbody{margin-top:8px;display:grid;gap:6px}
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" id="t1" aria-selected="true" data-p="p1">ימי הולדת</button>
     <button class="tab" role="tab" id="t2" aria-selected="false" data-p="p2">דף קשר</button>
+    <button class="tab" role="tab" id="t3" aria-selected="false" data-p="p3">מערכת שעות</button>
   </div>
 
   <section class="panel on" id="p1">
@@ -185,6 +204,29 @@ details.card.past[open] .cbody{margin-top:8px;display:grid;gap:6px}
       <div class="list" id="clist"></div>
     </div>
   </section>
+  <section class="panel" id="p3">
+    <div class="box sch">
+      <div class="schhead">
+        <img src="art/globe.png" alt="">
+        <div><h2>מערכת שעות כיתה א׳1</h2><p>היום הנוכחי מסומן בצבע.</p></div>
+        <img src="art/pencil.png" alt="">
+      </div>
+      <div class="tblwrap">
+        <table class="sched" id="sched">
+          <thead><tr><th class="hr">שעה</th><th data-d="0">יום א׳</th><th data-d="1">יום ב׳</th><th data-d="2">יום ג׳</th><th data-d="3">יום ד׳</th><th data-d="4">יום ה׳</th><th data-d="5">יום ו׳</th></tr></thead>
+          <tbody>
+          <tr><th class="hr">1</th><td class="c-lang">שפה</td><td class="c-sci long">מדע וטכנולוגיה</td><td class="c-lang">שפה</td><td class="c-math">חשבון</td><td class="c-lang">שפה</td><td class="c-sci">אוריינות דיגיטלית</td></tr>
+          <tr><th class="hr">2</th><td class="c-lang">שפה</td><td class="c-art">מחול</td><td class="c-lang">שפה</td><td class="c-math">חשבון</td><td class="c-lang">שפה</td><td class="c-math">חשבון</td></tr>
+          <tr><th class="hr">3</th><td class="c-math">חשבון</td><td class="c-sci long">מדע וטכנולוגיה</td><td class="c-lang">שפה</td><td class="c-pe">חינוך גופני</td><td class="c-art">יוצר ויצירה</td><td class="c-math">חשבון</td></tr>
+          <tr><th class="hr">4</th><td class="c-lang">שפה</td><td class="c-gold">זהב</td><td class="c-heart">מפתח הלב</td><td class="c-lang">שפה</td><td class="c-lang">שפה</td><td class="c-heart">כישורי חיים</td></tr>
+          <tr><th class="hr">5</th><td class="c-art">אמנות</td><td class="c-pe">חינוך גופני</td><td class="c-lang">שפה</td><td class="c-lang">שפה</td><td class="c-math">חשבון</td><td class="c-empty"></td></tr>
+          <tr><th class="hr">6</th><td class="c-empty"></td><td class="c-empty"></td><td class="c-art">מוסיקה</td><td class="c-empty"></td><td class="c-empty"></td><td class="c-empty"></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <img class="palette" src="art/palette.png" alt="">
+    </div>
+  </section>
   <p class="note">הדף מיועד להורי כיתה א׳1.</p>
 </div>
 
@@ -200,10 +242,12 @@ document.querySelectorAll('.tab').forEach(function (b) {
     document.querySelectorAll('.tab').forEach(function (x) { x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
     document.querySelectorAll('.panel').forEach(function (p) { p.classList.toggle('on', p.id === b.dataset.p); });
     if (b.dataset.p === 'p2') loadContacts();
-    history.replaceState(null, '', b.dataset.p === 'p2' ? '#contacts' : '#birthdays');
+    history.replaceState(null, '', b.dataset.p === 'p2' ? '#contacts' : b.dataset.p === 'p3' ? '#schedule' : '#birthdays');
   });
 });
 if (location.hash === '#contacts') document.getElementById('t2').click();
+if (location.hash === '#schedule') document.getElementById('t3').click();
+(function () { var d = new Date().getDay(); if (d > 5) return; document.querySelectorAll('#sched [data-d="' + d + '"]').forEach(function (x) { x.classList.add('today'); }); document.querySelectorAll('#sched tbody tr').forEach(function (r) { var c = r.children[d + 1]; if (c) c.classList.add('today'); }); })();
 
 // calendar buttons
 var icsUrl = API + '?action=ics';
