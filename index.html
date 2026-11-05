@@ -65,6 +65,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--fuchsia)
 .bd-past{background:#E9E6EE;color:#6B6680}
 .card.past{background:#F6F3F7;border-color:#E6E1EC;opacity:.78}
 .card.past .who{color:#7C7690}
+.links a.editlink{background:#fff;border:2px solid var(--pink2)}
 .links{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
 .links a{font-size:14px;font-weight:700;color:var(--deep);background:var(--pink);border-radius:999px;padding:6px 14px;text-decoration:none;border:1px solid var(--pink2)}
 .empty{text-align:center;color:var(--muted);padding:18px}
@@ -137,8 +138,8 @@ details.card.past[open] .cbody{margin-top:8px;display:grid;gap:6px}
     <div class="btns" style="margin-top:16px"><button class="btn b-pink" type="button" id="addBtn">הוספת אירוע</button></div>
 
     <div class="box" id="addBox" style="display:none">
-      <h2>הוספת אירוע <img class="gifti" src="art/gift.png" alt=""></h2>
-      <p>אם משהו השתנה, מזינים שוב והעדכון האחרון קובע.</p>
+      <h2 id="formTitle">הוספת אירוע <img class="gifti" src="art/gift.png" alt=""></h2>
+      <p>אפשר לערוך תאריך, שעה ומקום של כל אירוע בלחיצה על "עריכה" בכרטיס שלו. כולם יראו את העדכון.</p>
       <form id="f">
         <label>איזה סוג אירוע
           <select id="type">
@@ -171,7 +172,7 @@ details.card.past[open] .cbody{margin-top:8px;display:grid;gap:6px}
         <label>השם שלכם (לא חובה)
           <input id="parent" maxlength="60">
         </label>
-        <div class="btns"><button class="btn b-pink" type="submit" id="send">שליחה</button></div>
+        <div class="btns"><button class="btn b-pink" type="submit" id="send">שליחה</button><button class="btn b-soft" type="button" id="cancelEdit" style="display:none">ביטול</button></div>
         <div class="msg" id="msg"></div>
       </form>
     </div>
@@ -220,7 +221,7 @@ function startOf(it) {
 }
 function whenText(it) {
   var s = startOf(it), day = s.toLocaleDateString('he-IL', { weekday: 'long' });
-  return day + ', ' + pad(s.getDate()) + '.' + pad(s.getMonth() + 1) + '.' + s.getFullYear() + (it.time ? ' בשעה ' + it.time : '');
+  return day + ', ' + pad(s.getDate()) + '.' + pad(s.getMonth() + 1) + '.' + s.getFullYear() + (it.time ? ' בשעה ' + it.time : ' (השעה עדיין לא ידועה)');
 }
 function shortDate(it) { var s = startOf(it); return pad(s.getDate()) + '.' + pad(s.getMonth() + 1); }
 function firstName(k) { return String(k).split(' ')[0]; }
@@ -243,7 +244,7 @@ function prepare(items) {
   var by = {}, out = [];
   items.forEach(function (it) {
     var c = { kid: it.kid, date: it.date, time: it.time, place: it.place, notes: it.notes, parent: it.parent, type: it.type || 'bday', withKid: it.withKid };
-    c.names = namesOf(c); c.notesC = cleanNotes(c);
+    c.names = namesOf(c); c.notesC = cleanNotes(c); c.rawNotes = it.notes || '';
     var k = c.type === 'bday' && (c.place || '').trim() ? c.date + '|' + c.time + '|' + c.place.trim() : null;
     if (k && by[k]) {
       var g = by[k];
@@ -282,11 +283,12 @@ function render() {
     body.appendChild(el('div', 'when', whenText(it)));
     if (it.place) body.appendChild(el('div', 'meta', 'מקום: ' + it.place));
     if (it.notesC) body.appendChild(el('div', 'meta', it.notesC));
-    if (it.parent) body.appendChild(el('div', 'meta', 'הוזן על ידי ' + it.parent));
+    if (it.parent) body.appendChild(el('div', 'meta', 'עודכן על ידי ' + it.parent));
     if (!past) {
       var L = el('div', 'links');
       var a1 = el('a', null, 'הוספה ליומן'); a1.href = gcal(it); a1.target = '_blank'; a1.rel = 'noopener'; L.appendChild(a1);
       if (it.place) { var a2 = el('a', null, 'ניווט בוויז'); a2.href = waze(it.place); a2.target = '_blank'; a2.rel = 'noopener'; L.appendChild(a2); }
+      var ed = el('a', 'editlink', 'עריכה'); ed.href = '#'; ed.addEventListener('click', function (e) { e.preventDefault(); openForm(it); }); L.appendChild(ed);
       body.appendChild(L);
     }
     var c;
@@ -317,12 +319,29 @@ function loadList() {
     $('loading').style.display = 'none'; render();
   }).catch(function () { $('loading').textContent = 'לא הצלחנו לטעון. נסו לרענן את הדף.'; });
 }
+var EDITING = null;
+function lockFields(on) { ['type', 'kid', 'kid2', 'evTitle'].forEach(function (id) { $(id).disabled = on; }); }
+function closeForm() { $('addBox').style.display = 'none'; $('addBtn').textContent = 'הוספת אירוע'; EDITING = null; }
+function openForm(it) {
+  var bx = $('addBox'); $('msg').textContent = '';
+  $('f').reset(); lockFields(false); EDITING = null;
+  $('formTitle').firstChild.nodeValue = 'הוספת אירוע ';
+  $('send').textContent = 'שליחה'; $('cancelEdit').style.display = 'none';
+  if (it) {
+    EDITING = it; $('type').value = it.type; syncType();
+    if (it.type === 'bday') { $('kid').value = it.kid; $('kid2').value = it.withKid || ''; } else { $('evTitle').value = it.kid; }
+    $('date').value = it.date; $('time').value = it.time || ''; $('place').value = it.place || ''; $('notes').value = it.notesC || ''; $('parent').value = '';
+    lockFields(true);
+    $('formTitle').firstChild.nodeValue = 'עריכת ' + it.title + ' ';
+    $('send').textContent = 'שמירת שינויים'; $('cancelEdit').style.display = '';
+  } else { syncType(); }
+  bx.style.display = ''; $('addBtn').textContent = 'סגירה';
+  bx.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 $('addBtn').addEventListener('click', function () {
-  var bx = $('addBox'), open = bx.style.display === 'none';
-  bx.style.display = open ? '' : 'none';
-  $('addBtn').textContent = open ? 'סגירה' : 'הוספת אירוע';
-  if (open) bx.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if ($('addBox').style.display === 'none') openForm(null); else closeForm();
 });
+$('cancelEdit').addEventListener('click', closeForm);
 function syncType() {
   var bd = $('type').value === 'bday';
   $('bdFields').style.display = bd ? 'grid' : 'none'; $('evField').style.display = bd ? 'none' : 'grid';
@@ -331,21 +350,23 @@ $('type').addEventListener('change', syncType); syncType();
 $('f').addEventListener('submit', function (e) {
   e.preventDefault(); var m = $('msg'); m.className = 'msg'; m.textContent = '';
   var type = $('type').value, bd = type === 'bday';
+  var wasEdit = !!EDITING, joint = '';
+  if (wasEdit) { var jm = JOINT_RE.exec(EDITING.rawNotes || ''); if (jm) joint = jm[0].trim() + ' '; }
   if (bd && !$('kid').value) { m.className = 'msg err'; m.textContent = 'בחרו מי חוגג או חוגגת.'; return; }
   if (!bd && !$('evTitle').value.trim()) { m.className = 'msg err'; m.textContent = 'כתבו שם לאירוע.'; return; }
   if (!$('date').value) { m.className = 'msg err'; m.textContent = 'בחרו תאריך.'; return; }
   var btn = $('send'); btn.disabled = true; btn.textContent = 'שולחים...';
-  var body = { type: type, kid: bd ? $('kid').value : $('evTitle').value.trim(), withKid: bd ? $('kid2').value : '', date: $('date').value, time: $('time').value, place: $('place').value, notes: $('notes').value, parent: $('parent').value };
+  var body = { type: type, kid: bd ? $('kid').value : $('evTitle').value.trim(), withKid: bd ? $('kid2').value : '', date: $('date').value, time: $('time').value, place: $('place').value, notes: joint + $('notes').value, parent: $('parent').value };
   fetch(API, { method: 'POST', headers: { 'content-type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
     .then(function (r) { return r.json(); })
     .then(function (d) {
       if (d.ok) {
-        m.className = 'msg ok'; m.textContent = 'נשמר. תודה! היומן יתעדכן תוך כמה דקות.'; $('f').reset(); syncType(); loadList();
-        setTimeout(function () { $('addBox').style.display = 'none'; $('addBtn').textContent = 'הוספת אירוע'; m.textContent = ''; }, 1800);
+        m.className = 'msg ok'; m.textContent = wasEdit ? 'השינוי נשמר ויופיע לכולם. היומן יתעדכן תוך כמה דקות.' : 'נשמר. תודה! היומן יתעדכן תוך כמה דקות.'; loadList();
+        setTimeout(function () { if ($('msg').textContent === m.textContent) { closeForm(); $('f').reset(); lockFields(false); syncType(); m.textContent = ''; } }, 1800);
       } else { m.className = 'msg err'; m.textContent = 'משהו לא נשמר. בדקו את הפרטים ונסו שוב.'; }
     })
     .catch(function () { m.className = 'msg err'; m.textContent = 'לא הצלחנו לשלוח. נסו שוב.'; })
-    .then(function () { btn.disabled = false; btn.textContent = 'שליחה'; });
+    .then(function () { btn.disabled = false; btn.textContent = EDITING ? 'שמירת שינויים' : 'שליחה'; });
 });
 loadList();
 
