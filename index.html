@@ -121,7 +121,7 @@ details.card.past[open] .cbody{margin-top:8px;display:grid;gap:6px}
   <section class="panel on" id="p1">
     <div class="box">
       <h2>הוספה ליומן</h2>
-      <p>כל ימי ההולדת שהוזנו כאן נכנסים ליומן שלכם, ומתעדכנים לבד כשמישהו מוסיף או משנה אירוע.</p>
+      <p>כל ימי ההולדת שהוזנו כאן נכנסים ליומן שלכם, ומתעדכנים לבד כשמישהו מוסיף או משנה אירוע (בגוגל העדכון יכול לקחת כמה שעות). "הורדת קובץ" מעתיקה את האירועים כפי שהם היום ולא מתעדכנת.</p>
       <div class="btns">
         <a class="btn b-pink" id="calGoogle" target="_blank" rel="noopener">ליומן של גוגל</a>
         <a class="btn b-sky" id="calApple">לאייפון ולמק</a>
@@ -361,7 +361,7 @@ $('f').addEventListener('submit', function (e) {
     .then(function (r) { return r.json(); })
     .then(function (d) {
       if (d.ok) {
-        m.className = 'msg ok'; m.textContent = wasEdit ? 'השינוי נשמר ויופיע לכולם. היומן יתעדכן תוך כמה דקות.' : 'נשמר. תודה! היומן יתעדכן תוך כמה דקות.'; loadList();
+        m.className = 'msg ok'; m.textContent = wasEdit ? 'השינוי נשמר ויופיע לכולם. מי שחיבר את היומן דרך הכפתורים למעלה יקבל אותו לבד, בגוגל זה יכול לקחת כמה שעות.' : 'נשמר. תודה! מי שחיבר את היומן דרך הכפתורים למעלה יקבל אותו לבד, בגוגל זה יכול לקחת כמה שעות.'; loadList();
         setTimeout(function () { if ($('msg').textContent === m.textContent) { closeForm(); $('f').reset(); lockFields(false); syncType(); m.textContent = ''; } }, 1800);
       } else { m.className = 'msg err'; m.textContent = 'משהו לא נשמר. בדקו את הפרטים ונסו שוב.'; }
     })
