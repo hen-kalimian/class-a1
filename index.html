@@ -428,7 +428,7 @@ function pretty(p) {
 function pcell(role, name, phone) {
   var c = el('div', 'pcell');
   c.appendChild(el('div', 'role', role));
-  if (!name && !phone) { c.appendChild(el('div', 'nm', '—')); return c; }
+  if (!waNum(phone)) return null;
   var n = el('div', 'nm'); n.appendChild(document.createTextNode(name || ''));
   var num = waNum(phone);
   if (num) {
@@ -447,7 +447,8 @@ function renderContacts() {
   var q = $('q').value.trim(), box = $('clist'); box.textContent = '';
   CONTACTS.slice().sort(function (a, b) { return famFirst(a.name).localeCompare(famFirst(b.name), 'he'); }).filter(function (c) { return !q || (c.name + ' ' + c.mom + ' ' + c.dad + ' ' + c.momPhone + ' ' + c.dadPhone).indexOf(q) >= 0; }).forEach(function (c) {
     var k = el('div', 'ccard'); k.appendChild(el('div', 'who', famFirst(c.name)));
-    var g = el('div', 'pgrid'); g.appendChild(pcell('אמא', c.mom, c.momPhone)); g.appendChild(pcell('אבא', c.dad, c.dadPhone)); k.appendChild(g);
+    var cells = [pcell('אמא', c.mom, c.momPhone), pcell('אבא', c.dad, c.dadPhone)].filter(Boolean);
+    if (cells.length) { var g = el('div', 'pgrid'); if (cells.length === 1) g.style.gridTemplateColumns = '1fr'; cells.forEach(function (x) { g.appendChild(x); }); k.appendChild(g); }
     box.appendChild(k);
   });
   if (!box.children.length) box.appendChild(el('div', 'empty', 'לא נמצאו תוצאות.'));
