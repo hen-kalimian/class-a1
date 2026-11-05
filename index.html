@@ -17,8 +17,20 @@
 html{-webkit-text-size-adjust:100%}
 body{margin:0;font-family:'Rubik',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
 .wrap{max-width:720px;margin:0 auto;padding:0 16px 56px}
-header{padding:28px 0 8px;text-align:center}
-h1{margin:0;font-size:30px;font-weight:800;color:var(--deep)}
+body{background:var(--bg) radial-gradient(circle at 12% 8%,#FDE1EA 0,transparent 38%),radial-gradient(circle at 92% 4%,#DDEEFB 0,transparent 34%)}
+header{padding:20px 0 6px;text-align:center}
+.hero{display:flex;align-items:flex-end;justify-content:center;gap:10px}
+.hero img{display:block;height:92px;width:auto}
+.hero img.mid{height:118px}
+.hero .ttl{padding-bottom:6px}
+.party{display:block;margin:6px auto 0;max-height:150px;width:auto}
+.dots{height:10px;margin:10px auto 0;max-width:260px;background:radial-gradient(circle,#FBC5D6 4px,transparent 5px) 0 0/22px 10px repeat-x}
+.card{background:linear-gradient(180deg,#fff 0,#FFF9FB 100%)}
+.gifti{height:34px;width:auto;vertical-align:middle;margin-inline-start:6px}
+.card .cakeico{position:absolute;left:12px;bottom:8px;height:44px;width:auto;opacity:.95;pointer-events:none}
+.card.past .cakeico{opacity:.35;filter:grayscale(.4)}
+@media (max-width:560px){.hero{flex-wrap:wrap}.hero .ttl{order:-1;flex-basis:100%;padding-bottom:0}.hero img{height:84px}.hero img.mid{height:104px}}
+h1{margin:0;font-size:32px;font-weight:800;color:var(--deep)}
 .sub{margin:6px 0 0;color:var(--muted);font-size:15px}
 .tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 0 10px;display:flex;gap:8px;justify-content:center}
 .tab{flex:1;max-width:240px;border:2px solid var(--pink2);background:#fff;color:var(--deep);border-radius:999px;padding:11px 8px;font:inherit;font-weight:700;font-size:16px;cursor:pointer}
@@ -73,14 +85,18 @@ a.call{font-size:13px;color:var(--muted);text-decoration:none;margin-inline-star
 .addr{font-size:14px;color:var(--muted)}
 .addr a{color:var(--deep);font-weight:700;text-decoration:none}
 .note{font-size:13px;color:var(--muted);text-align:center;margin-top:16px}
-@media (max-width:420px){h1{font-size:26px}.row2{grid-template-columns:1fr}}
+@media (max-width:420px){h1{font-size:28px}.row2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>כיתה א׳1</h1>
-    <p class="sub">ימי הולדת ודף קשר של ההורים</p>
+    <div class="hero">
+      <img src="art/balloons.png" alt="">
+      <div class="ttl"><h1>כיתה א׳1</h1><p class="sub">ימי הולדת ודף קשר של ההורים</p></div>
+      <img class="mid" src="art/kids.png" alt="">
+    </div>
+    <div class="dots"></div>
   </header>
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" id="t1" aria-selected="true" data-p="p1">ימי הולדת</button>
@@ -99,11 +115,14 @@ a.call{font-size:13px;color:var(--muted);text-decoration:none;margin-inline-star
     </div>
 
     <div class="box">
-      <h2>הוספת יום הולדת</h2>
+      <h2>הוספת יום הולדת <img class="gifti" src="art/gift.png" alt=""></h2>
       <p>הזינו את פרטי המסיבה של הילד או הילדה שלכם. אם משהו השתנה, מזינים שוב והעדכון האחרון קובע.</p>
       <form id="f">
         <label>מי חוגג או חוגגת
           <select id="kid" required></select>
+        </label>
+        <label>חוגגים יחד עם (לא חובה)
+          <select id="kid2"></select>
         </label>
         <div class="row2">
           <label>תאריך <input type="date" id="date" required></label>
@@ -134,20 +153,13 @@ a.call{font-size:13px;color:var(--muted);text-decoration:none;margin-inline-star
   </section>
 
   <section class="panel" id="p2">
-    <div class="box gate" id="gate">
-      <h2>דף קשר של הכיתה</h2>
-      <p>הדף פתוח להורי הכיתה בלבד. הקוד נמצא בקבוצת ההורים.</p>
-      <input id="code" placeholder="קוד הכיתה" autocomplete="off" autocapitalize="off">
-      <div class="btns"><button class="btn b-pink" id="enter">כניסה</button></div>
-      <div class="msg err" id="gmsg"></div>
-    </div>
-    <div id="contacts" style="display:none">
+    <div id="contacts">
       <input class="search" id="q" placeholder="חיפוש לפי שם ילד, הורה או רחוב" type="search">
       <p class="note" style="margin:8px 0 0">לחיצה על מספר פותחת הודעת וואטסאפ להורה.</p>
       <div class="list" id="clist"></div>
     </div>
   </section>
-  <p class="note">הדף מיועד להורי כיתה א׳1 בלבד. נא לא להעביר את הקוד הלאה.</p>
+  <p class="note">הדף מיועד להורי כיתה א׳1.</p>
 </div>
 
 <script>
@@ -161,7 +173,7 @@ document.querySelectorAll('.tab').forEach(function (b) {
   b.addEventListener('click', function () {
     document.querySelectorAll('.tab').forEach(function (x) { x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
     document.querySelectorAll('.panel').forEach(function (p) { p.classList.toggle('on', p.id === b.dataset.p); });
-    if (b.dataset.p === 'p2') tryEnter(ls('a1code'), true);
+    if (b.dataset.p === 'p2') loadContacts();
     history.replaceState(null, '', b.dataset.p === 'p2' ? '#contacts' : '#birthdays');
   });
 });
@@ -187,18 +199,34 @@ function whenText(it) {
 function gcal(it) {
   var s = startOf(it), e = new Date(s.getTime() + 2 * 3600e3), f = function (d) { return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + 'T' + pad(d.getHours()) + pad(d.getMinutes()) + '00'; };
   var dates = it.time ? f(s) + '/' + f(e) : f(s).slice(0, 8) + '/' + f(new Date(s.getTime() + 86400e3)).slice(0, 8);
-  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent('יום הולדת ' + it.kid.split(' ')[0]) + '&dates=' + dates + '&ctz=Asia/Jerusalem&location=' + encodeURIComponent(it.place || '') + '&details=' + encodeURIComponent(it.notes || '');
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent('יום הולדת ' + it.title) + '&dates=' + dates + '&ctz=Asia/Jerusalem&location=' + encodeURIComponent(it.place || '') + '&details=' + encodeURIComponent(it.notes || '');
+}
+function firstName(k) { return String(k).split(' ')[0]; }
+// "נועם ועומרי חוגגים יחד. ..." בהערות = חגיגה משותפת
+function jointNames(it) { var m = /^\s*(.+?)\s+חוגג(?:ים|ות)\s+יחד[.,:;\s]*/.exec(it.notes || ''); return m ? m[1] : ''; }
+function cleanNotes(it) { return String(it.notes || '').replace(/^\s*.+?\s+חוגג(?:ים|ות)\s+יחד[.,:;\s]*/, '').trim(); }
+function titleOf(it) { return jointNames(it) || firstName(it.kid); }
+function mergeSame(items) {
+  var by = {}, out = [];
+  items.forEach(function (it) {
+    var k = it.date + '|' + it.time + '|' + (it.place || '').trim();
+    if (by[k] && (it.place || '').trim()) { var g = by[k]; var n = titleOf(it); if (g._t.indexOf(n) < 0 && n.split(' ו').every(function (x) { return g._t.join(' ').indexOf(x.replace(/^ו/, '')) < 0; })) g._t.push(n); if (!g.notesC && cleanNotes(it)) g.notesC = cleanNotes(it); return; }
+    var g = {kid: it.kid, date: it.date, time: it.time, place: it.place, notes: it.notes, parent: it.parent, _t: [titleOf(it)], notesC: cleanNotes(it)};
+    by[k] = g; out.push(g);
+  });
+  out.forEach(function (g) { g.title = g._t.join(' ו'); });
+  return out;
 }
 function waze(q) { return 'https://waze.com/ul?q=' + encodeURIComponent(q) + '&navigate=yes'; }
 function render() {
   var list = $('list'); list.textContent = '';
   var now = Date.now();
-  var items = ITEMS.slice().sort(function (a, b) { return startOf(a) - startOf(b); });
+  var items = mergeSame(ITEMS).sort(function (a, b) { return startOf(a) - startOf(b); });
   if (!items.length) list.appendChild(el('div', 'empty', 'עוד לא הוזן אף יום הולדת. אפשר להיות הראשונים.'));
   items.forEach(function (it) {
     var s = startOf(it), past = (s.getTime() + 2 * 3600e3) < now;
     var c = el('div', 'card' + (past ? ' past' : ''));
-    var top = el('div', 'top'); top.appendChild(el('div', 'who', 'יום הולדת ' + it.kid));
+    var top = el('div', 'top'); top.appendChild(el('div', 'who', 'יום הולדת ' + it.title));
     var days = Math.floor((new Date(s.getFullYear(), s.getMonth(), s.getDate()) - new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())) / 86400e3);
     var b;
     if (past) b = el('span', 'badge bd-past', 'חלף');
@@ -208,7 +236,7 @@ function render() {
     top.appendChild(b); c.appendChild(top);
     c.appendChild(el('div', 'when', whenText(it)));
     if (it.place) c.appendChild(el('div', 'meta', 'מקום: ' + it.place));
-    if (it.notes) c.appendChild(el('div', 'meta', it.notes));
+    if (it.notesC) c.appendChild(el('div', 'meta', it.notesC));
     if (it.parent) c.appendChild(el('div', 'meta', 'הוזן על ידי ' + it.parent));
     if (!past) {
       var L = el('div', 'links');
@@ -216,6 +244,7 @@ function render() {
       if (it.place) { var a2 = el('a', null, 'ניווט בוויז'); a2.href = waze(it.place); a2.target = '_blank'; a2.rel = 'noopener'; L.appendChild(a2); }
       c.appendChild(L);
     }
+    var ic = el('img', 'cakeico'); ic.src = 'art/cake.png'; ic.alt = ''; c.appendChild(ic);
     list.appendChild(c);
   });
   // pending
@@ -232,6 +261,10 @@ function loadList() {
     var o = el('option', null, 'בחרו ילד או ילדה'); o.value = ''; sel.appendChild(o);
     KIDS.forEach(function (k) { var x = el('option', null, k); x.value = k; sel.appendChild(x); });
     sel.value = cur;
+    var s2 = $('kid2'), cur2 = s2.value; s2.textContent = '';
+    var o2 = el('option', null, 'חוגג או חוגגת לבד'); o2.value = ''; s2.appendChild(o2);
+    KIDS.forEach(function (k) { var x2 = el('option', null, k); x2.value = k; s2.appendChild(x2); });
+    s2.value = cur2;
     $('loading').style.display = 'none'; render();
   }).catch(function () { $('loading').textContent = 'לא הצלחנו לטעון. נסו לרענן את הדף.'; });
 }
@@ -240,7 +273,8 @@ $('f').addEventListener('submit', function (e) {
   if (!$('kid').value) { m.className = 'msg err'; m.textContent = 'בחרו מי חוגג או חוגגת.'; return; }
   if (!$('date').value) { m.className = 'msg err'; m.textContent = 'בחרו תאריך.'; return; }
   var btn = $('send'); btn.disabled = true; btn.textContent = 'שולחים...';
-  var body = { kid: $('kid').value, date: $('date').value, time: $('time').value, place: $('place').value, notes: $('notes').value, parent: $('parent').value };
+  var joint = $('kid2').value && $('kid2').value !== $('kid').value ? firstName($('kid').value) + ' ו' + firstName($('kid2').value) + ' חוגגים יחד. ' : '';
+  var body = { kid: $('kid').value, date: $('date').value, time: $('time').value, place: $('place').value, notes: joint + $('notes').value, parent: $('parent').value };
   fetch(API, { method: 'POST', headers: { 'content-type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
     .then(function (r) { return r.json(); })
     .then(function (d) {
@@ -287,17 +321,16 @@ function renderContacts() {
   });
   if (!box.children.length) box.appendChild(el('div', 'empty', 'לא נמצאו תוצאות.'));
 }
-function tryEnter(code, silent) {
-  if (!code) return;
-  fetch(API + '?action=contacts&code=' + encodeURIComponent(code)).then(function (r) { return r.json(); }).then(function (d) {
-    if (d.contacts) { ls('a1code', code); CONTACTS = d.contacts; $('gate').style.display = 'none'; $('contacts').style.display = ''; renderContacts(); }
-    else if (!silent) { $('gmsg').textContent = 'הקוד לא נכון. נסו שוב.'; }
-    else { ls('a1code', ''); }
-  }).catch(function () { if (!silent) $('gmsg').textContent = 'לא הצלחנו להתחבר. נסו שוב.'; });
+var CODE = 'b21ac6b82e', contactsLoaded = false;
+function loadContacts() {
+  if (contactsLoaded) return;
+  fetch(API + '?action=contacts&code=' + CODE).then(function (r) { return r.json(); }).then(function (d) {
+    if (d.contacts) { contactsLoaded = true; CONTACTS = d.contacts; renderContacts(); }
+    else $('clist').appendChild(el('div', 'empty', 'לא הצלחנו לטעון. נסו לרענן את הדף.'));
+  }).catch(function () { $('clist').appendChild(el('div', 'empty', 'לא הצלחנו לטעון. נסו לרענן את הדף.')); });
 }
-$('enter').addEventListener('click', function () { $('gmsg').textContent = ''; tryEnter($('code').value.trim(), false); });
-$('code').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('enter').click(); });
 $('q').addEventListener('input', renderContacts);
+if (location.hash === '#contacts') loadContacts();
 </script>
 </body>
 </html>
