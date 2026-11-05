@@ -85,7 +85,21 @@ a.call{font-size:13px;color:var(--muted);text-decoration:none;margin-inline-star
 .addr{font-size:14px;color:var(--muted)}
 .addr a{color:var(--deep);font-weight:700;text-decoration:none}
 .note{font-size:13px;color:var(--muted);text-align:center;margin-top:16px}
-@media (max-width:420px){h1{font-size:28px}.row2{grid-template-columns:1fr}}
+@media (max-width:420px){h1{font-size:28px}.row2{grid-template-columns:1fr}.pgrid{gap:5px}.pcell{padding:4px 7px}}
+.ccard{padding:8px 12px;gap:4px;border-radius:16px}
+.ccard .who{font-size:16px}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pcell{background:var(--bg);border-radius:12px;padding:5px 9px;font-size:13px;line-height:1.35;min-width:0}
+.pcell .role{font-size:11px;font-weight:700;color:var(--muted)}
+.pcell .nm{font-weight:500;word-break:break-word}
+.pcell a.wa{display:inline-flex;font-size:13px;padding:2px 9px;margin-top:2px}
+#clist{gap:8px}
+details.card.past{padding:8px 14px}
+.psum{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px}
+.psum::-webkit-details-marker{display:none}
+.psum .who{font-size:16px;flex:1}
+.psum .pd{color:var(--muted);font-size:14px}
+details.card.past[open] .cbody{margin-top:8px;display:grid;gap:6px}
 </style>
 </head>
 <body>
@@ -114,15 +128,35 @@ a.call{font-size:13px;color:var(--muted);text-decoration:none;margin-inline-star
       </div>
     </div>
 
-    <div class="box">
-      <h2>הוספת יום הולדת <img class="gifti" src="art/gift.png" alt=""></h2>
-      <p>הזינו את פרטי המסיבה של הילד או הילדה שלכם. אם משהו השתנה, מזינים שוב והעדכון האחרון קובע.</p>
+
+    <div id="listWrap">
+      <div class="empty" id="loading">טוענים את האירועים...</div>
+      <div class="list" id="list"></div>
+    </div>
+
+    <div class="btns" style="margin-top:16px"><button class="btn b-pink" type="button" id="addBtn">הוספת אירוע</button></div>
+
+    <div class="box" id="addBox" style="display:none">
+      <h2>הוספת אירוע <img class="gifti" src="art/gift.png" alt=""></h2>
+      <p>אם משהו השתנה, מזינים שוב והעדכון האחרון קובע.</p>
       <form id="f">
-        <label>מי חוגג או חוגגת
-          <select id="kid" required></select>
+        <label>איזה סוג אירוע
+          <select id="type">
+            <option value="bday">יום הולדת</option>
+            <option value="class">אירוע כיתתי</option>
+            <option value="school">אירוע בית ספרי</option>
+          </select>
         </label>
-        <label>חוגגים יחד עם (לא חובה)
-          <select id="kid2"></select>
+        <div id="bdFields" style="display:grid;gap:10px">
+          <label>מי חוגג או חוגגת
+            <select id="kid"></select>
+          </label>
+          <label>חוגגים יחד עם (לא חובה)
+            <select id="kid2"></select>
+          </label>
+        </div>
+        <label id="evField" style="display:none">שם האירוע
+          <input id="evTitle" maxlength="80" placeholder="לדוגמה: טיול שנתי, מסיבת חנוכה">
         </label>
         <div class="row2">
           <label>תאריך <input type="date" id="date" required></label>
@@ -141,20 +175,11 @@ a.call{font-size:13px;color:var(--muted);text-decoration:none;margin-inline-star
         <div class="msg" id="msg"></div>
       </form>
     </div>
-
-    <div id="listWrap">
-      <div class="empty" id="loading">טוענים את ימי ההולדת...</div>
-      <div class="list" id="list"></div>
-    </div>
-    <details class="pending box" id="pendBox" style="display:none">
-      <summary>עוד לא הוזן יום הולדת (<span id="pendN"></span>)</summary>
-      <div class="chips" id="pend"></div>
-    </details>
   </section>
 
   <section class="panel" id="p2">
     <div id="contacts">
-      <input class="search" id="q" placeholder="חיפוש לפי שם ילד, הורה או רחוב" type="search">
+      <input class="search" id="q" placeholder="חיפוש לפי שם ילד או הורה" type="search">
       <p class="note" style="margin:8px 0 0">לחיצה על מספר פותחת הודעת וואטסאפ להורה.</p>
       <div class="list" id="clist"></div>
     </div>
@@ -185,8 +210,9 @@ $('calApple').href = icsUrl.replace(/^https:/, 'webcal:');
 $('calGoogle').href = 'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent(icsUrl.replace(/^https:/, 'webcal:'));
 $('calFile').href = icsUrl;
 
-// birthdays
+// events
 var KIDS = [], ITEMS = [];
+var TYPE_LABEL = { bday: 'יום הולדת', 'class': 'אירוע כיתתי', school: 'אירוע בית ספרי' };
 function pad(n) { return (n < 10 ? '0' : '') + n; }
 function startOf(it) {
   var d = it.date.split('-'); var t = /^\d{1,2}:\d{2}$/.test(it.time) ? it.time.split(':') : ['0', '0'];
@@ -196,90 +222,127 @@ function whenText(it) {
   var s = startOf(it), day = s.toLocaleDateString('he-IL', { weekday: 'long' });
   return day + ', ' + pad(s.getDate()) + '.' + pad(s.getMonth() + 1) + '.' + s.getFullYear() + (it.time ? ' בשעה ' + it.time : '');
 }
+function shortDate(it) { var s = startOf(it); return pad(s.getDate()) + '.' + pad(s.getMonth() + 1); }
+function firstName(k) { return String(k).split(' ')[0]; }
+// תאימות לאחור: "נועם ועומרי חוגגים יחד." בתחילת ההערות
+var JOINT_RE = /^\s*(.+?)\s+חוגג(?:ים|ות)\s+יחד[.,:;\s]*/;
+function namesOf(it) {
+  if (it.type !== 'bday') return [it.kid];
+  if (it.withKid) return [firstName(it.kid), firstName(it.withKid)];
+  var m = JOINT_RE.exec(it.notes || '');
+  if (m) return m[1].split(/\s+ו/).map(function (x) { return x.replace(/^ו/, ''); });
+  return [firstName(it.kid)];
+}
+function cleanNotes(it) { return String(it.notes || '').replace(JOINT_RE, '').trim(); }
+function titleOf(it) {
+  if (it.type !== 'bday') return TYPE_LABEL[it.type] + ': ' + it.kid;
+  return 'יום הולדת ' + it.names.join(' ו');
+}
+// אותה מסיבה שהוזנה כמה פעמים (אותו תאריך, שעה ומקום) הופכת לכרטיס אחד עם כל החוגגים
+function prepare(items) {
+  var by = {}, out = [];
+  items.forEach(function (it) {
+    var c = { kid: it.kid, date: it.date, time: it.time, place: it.place, notes: it.notes, parent: it.parent, type: it.type || 'bday', withKid: it.withKid };
+    c.names = namesOf(c); c.notesC = cleanNotes(c);
+    var k = c.type === 'bday' && (c.place || '').trim() ? c.date + '|' + c.time + '|' + c.place.trim() : null;
+    if (k && by[k]) {
+      var g = by[k];
+      if (c.names.length > g.names.length) g.names = c.names;
+      if (!g.notesC && c.notesC) g.notesC = c.notesC;
+      return;
+    }
+    if (k) by[k] = c;
+    out.push(c);
+  });
+  out.forEach(function (c) { c.title = titleOf(c); });
+  return out;
+}
 function gcal(it) {
   var s = startOf(it), e = new Date(s.getTime() + 2 * 3600e3), f = function (d) { return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + 'T' + pad(d.getHours()) + pad(d.getMinutes()) + '00'; };
   var dates = it.time ? f(s) + '/' + f(e) : f(s).slice(0, 8) + '/' + f(new Date(s.getTime() + 86400e3)).slice(0, 8);
-  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent('יום הולדת ' + it.title) + '&dates=' + dates + '&ctz=Asia/Jerusalem&location=' + encodeURIComponent(it.place || '') + '&details=' + encodeURIComponent(it.notes || '');
-}
-function firstName(k) { return String(k).split(' ')[0]; }
-// "נועם ועומרי חוגגים יחד. ..." בהערות = חגיגה משותפת
-function jointNames(it) { var m = /^\s*(.+?)\s+חוגג(?:ים|ות)\s+יחד[.,:;\s]*/.exec(it.notes || ''); return m ? m[1] : ''; }
-function cleanNotes(it) { return String(it.notes || '').replace(/^\s*.+?\s+חוגג(?:ים|ות)\s+יחד[.,:;\s]*/, '').trim(); }
-function titleOf(it) { return jointNames(it) || firstName(it.kid); }
-function mergeSame(items) {
-  var by = {}, out = [];
-  items.forEach(function (it) {
-    var k = it.date + '|' + it.time + '|' + (it.place || '').trim();
-    if (by[k] && (it.place || '').trim()) { var g = by[k]; var n = titleOf(it); if (g._t.indexOf(n) < 0 && n.split(' ו').every(function (x) { return g._t.join(' ').indexOf(x.replace(/^ו/, '')) < 0; })) g._t.push(n); if (!g.notesC && cleanNotes(it)) g.notesC = cleanNotes(it); return; }
-    var g = {kid: it.kid, date: it.date, time: it.time, place: it.place, notes: it.notes, parent: it.parent, _t: [titleOf(it)], notesC: cleanNotes(it)};
-    by[k] = g; out.push(g);
-  });
-  out.forEach(function (g) { g.title = g._t.join(' ו'); });
-  return out;
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(it.title) + '&dates=' + dates + '&ctz=Asia/Jerusalem&location=' + encodeURIComponent(it.place || '') + '&details=' + encodeURIComponent(it.notesC || '');
 }
 function waze(q) { return 'https://waze.com/ul?q=' + encodeURIComponent(q) + '&navigate=yes'; }
 function render() {
   var list = $('list'); list.textContent = '';
   var now = Date.now();
-  var items = mergeSame(ITEMS).sort(function (a, b) { return startOf(a) - startOf(b); });
-  if (!items.length) list.appendChild(el('div', 'empty', 'עוד לא הוזן אף יום הולדת. אפשר להיות הראשונים.'));
+  var items = prepare(ITEMS).sort(function (a, b) { return startOf(a) - startOf(b); });
+  var isPast = function (it) { return (startOf(it).getTime() + 2 * 3600e3) < now; };
+  items = items.filter(function (x) { return !isPast(x); }).concat(items.filter(isPast).reverse());
+  if (!items.length) list.appendChild(el('div', 'empty', 'עוד לא הוזן אף אירוע. אפשר להיות הראשונים.'));
   items.forEach(function (it) {
-    var s = startOf(it), past = (s.getTime() + 2 * 3600e3) < now;
-    var c = el('div', 'card' + (past ? ' past' : ''));
-    var top = el('div', 'top'); top.appendChild(el('div', 'who', 'יום הולדת ' + it.title));
+    var s = startOf(it), past = isPast(it);
     var days = Math.floor((new Date(s.getFullYear(), s.getMonth(), s.getDate()) - new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())) / 86400e3);
     var b;
     if (past) b = el('span', 'badge bd-past', 'חלף');
     else if (days === 0) b = el('span', 'badge bd-today', 'היום');
     else if (days === 1) b = el('span', 'badge bd-soon', 'מחר');
     else b = el('span', 'badge bd-soon', 'בעוד ' + days + ' ימים');
-    top.appendChild(b); c.appendChild(top);
-    c.appendChild(el('div', 'when', whenText(it)));
-    if (it.place) c.appendChild(el('div', 'meta', 'מקום: ' + it.place));
-    if (it.notesC) c.appendChild(el('div', 'meta', it.notesC));
-    if (it.parent) c.appendChild(el('div', 'meta', 'הוזן על ידי ' + it.parent));
+    var body = el('div', 'cbody');
+    body.appendChild(el('div', 'when', whenText(it)));
+    if (it.place) body.appendChild(el('div', 'meta', 'מקום: ' + it.place));
+    if (it.notesC) body.appendChild(el('div', 'meta', it.notesC));
+    if (it.parent) body.appendChild(el('div', 'meta', 'הוזן על ידי ' + it.parent));
     if (!past) {
       var L = el('div', 'links');
       var a1 = el('a', null, 'הוספה ליומן'); a1.href = gcal(it); a1.target = '_blank'; a1.rel = 'noopener'; L.appendChild(a1);
       if (it.place) { var a2 = el('a', null, 'ניווט בוויז'); a2.href = waze(it.place); a2.target = '_blank'; a2.rel = 'noopener'; L.appendChild(a2); }
-      c.appendChild(L);
+      body.appendChild(L);
     }
-    var ic = el('img', 'cakeico'); ic.src = 'art/cake.png'; ic.alt = ''; c.appendChild(ic);
+    var c;
+    if (past) {
+      c = el('details', 'card past');
+      var sm = el('summary', 'psum');
+      sm.appendChild(el('span', 'who', it.title)); sm.appendChild(el('span', 'pd', shortDate(it))); sm.appendChild(b);
+      c.appendChild(sm); c.appendChild(body);
+    } else {
+      c = el('div', 'card');
+      var top = el('div', 'top'); top.appendChild(el('div', 'who', it.title)); top.appendChild(b); c.appendChild(top);
+      while (body.firstChild) c.appendChild(body.firstChild);
+      var ic = el('img', 'cakeico'); ic.src = 'art/' + (it.type === 'bday' ? 'cake' : it.type === 'school' ? 'gift' : 'balloons') + '.png'; ic.alt = ''; c.appendChild(ic);
+    }
     list.appendChild(c);
   });
-  // pending
-  var have = {}; ITEMS.forEach(function (i) { have[i.kid] = 1; });
-  var pend = KIDS.filter(function (k) { return !have[k]; });
-  $('pend').textContent = '';
-  pend.forEach(function (k) { var b = el('button', 'chip', k); b.type = 'button'; b.addEventListener('click', function () { $('kid').value = k; $('f').scrollIntoView({ behavior: 'smooth', block: 'center' }); }); $('pend').appendChild(b); });
-  $('pendN').textContent = pend.length; $('pendBox').style.display = pend.length ? '' : 'none';
+}
+function fillSel(sel, first) {
+  var cur = sel.value; sel.textContent = '';
+  var o = el('option', null, first); o.value = ''; sel.appendChild(o);
+  KIDS.forEach(function (k) { var x = el('option', null, k); x.value = k; sel.appendChild(x); });
+  sel.value = cur;
 }
 function loadList() {
   return fetch(API + '?action=list').then(function (r) { return r.json(); }).then(function (d) {
     KIDS = d.kids || []; ITEMS = d.items || [];
-    var sel = $('kid'), cur = sel.value; sel.textContent = '';
-    var o = el('option', null, 'בחרו ילד או ילדה'); o.value = ''; sel.appendChild(o);
-    KIDS.forEach(function (k) { var x = el('option', null, k); x.value = k; sel.appendChild(x); });
-    sel.value = cur;
-    var s2 = $('kid2'), cur2 = s2.value; s2.textContent = '';
-    var o2 = el('option', null, 'חוגג או חוגגת לבד'); o2.value = ''; s2.appendChild(o2);
-    KIDS.forEach(function (k) { var x2 = el('option', null, k); x2.value = k; s2.appendChild(x2); });
-    s2.value = cur2;
+    fillSel($('kid'), 'בחרו ילד או ילדה'); fillSel($('kid2'), 'חוגג או חוגגת לבד');
     $('loading').style.display = 'none'; render();
   }).catch(function () { $('loading').textContent = 'לא הצלחנו לטעון. נסו לרענן את הדף.'; });
 }
+$('addBtn').addEventListener('click', function () {
+  var bx = $('addBox'), open = bx.style.display === 'none';
+  bx.style.display = open ? '' : 'none';
+  $('addBtn').textContent = open ? 'סגירה' : 'הוספת אירוע';
+  if (open) bx.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+function syncType() {
+  var bd = $('type').value === 'bday';
+  $('bdFields').style.display = bd ? 'grid' : 'none'; $('evField').style.display = bd ? 'none' : 'grid';
+}
+$('type').addEventListener('change', syncType); syncType();
 $('f').addEventListener('submit', function (e) {
   e.preventDefault(); var m = $('msg'); m.className = 'msg'; m.textContent = '';
-  if (!$('kid').value) { m.className = 'msg err'; m.textContent = 'בחרו מי חוגג או חוגגת.'; return; }
+  var type = $('type').value, bd = type === 'bday';
+  if (bd && !$('kid').value) { m.className = 'msg err'; m.textContent = 'בחרו מי חוגג או חוגגת.'; return; }
+  if (!bd && !$('evTitle').value.trim()) { m.className = 'msg err'; m.textContent = 'כתבו שם לאירוע.'; return; }
   if (!$('date').value) { m.className = 'msg err'; m.textContent = 'בחרו תאריך.'; return; }
   var btn = $('send'); btn.disabled = true; btn.textContent = 'שולחים...';
-  var joint = $('kid2').value && $('kid2').value !== $('kid').value ? firstName($('kid').value) + ' ו' + firstName($('kid2').value) + ' חוגגים יחד. ' : '';
-  var body = { kid: $('kid').value, date: $('date').value, time: $('time').value, place: $('place').value, notes: joint + $('notes').value, parent: $('parent').value };
+  var body = { type: type, kid: bd ? $('kid').value : $('evTitle').value.trim(), withKid: bd ? $('kid2').value : '', date: $('date').value, time: $('time').value, place: $('place').value, notes: $('notes').value, parent: $('parent').value };
   fetch(API, { method: 'POST', headers: { 'content-type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
     .then(function (r) { return r.json(); })
     .then(function (d) {
-      if (d.ok) { m.className = 'msg ok'; m.textContent = 'נשמר. תודה! היומן יתעדכן תוך כמה דקות.'; $('f').reset(); loadList(); }
-      else { m.className = 'msg err'; m.textContent = 'משהו לא נשמר. בדקו את הפרטים ונסו שוב.'; }
+      if (d.ok) {
+        m.className = 'msg ok'; m.textContent = 'נשמר. תודה! היומן יתעדכן תוך כמה דקות.'; $('f').reset(); syncType(); loadList();
+        setTimeout(function () { $('addBox').style.display = 'none'; $('addBtn').textContent = 'הוספת אירוע'; m.textContent = ''; }, 1800);
+      } else { m.className = 'msg err'; m.textContent = 'משהו לא נשמר. בדקו את הפרטים ונסו שוב.'; }
     })
     .catch(function () { m.className = 'msg err'; m.textContent = 'לא הצלחנו לשלוח. נסו שוב.'; })
     .then(function () { btn.disabled = false; btn.textContent = 'שליחה'; });
@@ -299,28 +362,28 @@ function pretty(p) {
   var d = String(p || '').replace(/\D/g, ''); if (d.indexOf('972') === 0) d = '0' + d.slice(3); else if (d.length === 9) d = '0' + d;
   return d.length === 10 ? d.slice(0, 3) + '-' + d.slice(3) : d;
 }
-function prow(role, name, phone, kid) {
-  if (!name && !phone) return null;
-  var r = el('div', 'prow'); var n = el('div', 'nm'); n.appendChild(document.createTextNode(name || '')); n.appendChild(el('small', null, '  ' + role + ' של ' + kid.split(' ')[0])); r.appendChild(n);
+function pcell(role, name, phone) {
+  var c = el('div', 'pcell');
+  c.appendChild(el('div', 'role', role));
+  if (!name && !phone) { c.appendChild(el('div', 'nm', '—')); return c; }
+  var n = el('div', 'nm'); n.appendChild(document.createTextNode(name || ''));
   var num = waNum(phone);
   if (num) {
-    var wrap = el('div');
     var a = el('a', 'wa', pretty(phone)); a.href = 'https://wa.me/' + num + '?text=' + encodeURIComponent('היי ' + (name || '') + ', '); a.target = '_blank'; a.rel = 'noopener';
-    wrap.appendChild(a); var c = el('a', 'call', 'חיוג'); c.href = 'tel:+' + num; wrap.appendChild(c); r.appendChild(wrap);
+    n.appendChild(document.createTextNode(' ')); n.appendChild(a);
   }
-  return r;
+  c.appendChild(n); return c;
 }
 function renderContacts() {
   var q = $('q').value.trim(), box = $('clist'); box.textContent = '';
-  CONTACTS.filter(function (c) { return !q || (c.name + ' ' + c.mom + ' ' + c.dad + ' ' + c.address).indexOf(q) >= 0; }).forEach(function (c) {
+  CONTACTS.filter(function (c) { return !q || (c.name + ' ' + c.mom + ' ' + c.dad + ' ' + c.momPhone + ' ' + c.dadPhone).indexOf(q) >= 0; }).forEach(function (c) {
     var k = el('div', 'ccard'); k.appendChild(el('div', 'who', c.name));
-    var m = prow('אמא', c.mom, c.momPhone, c.name); if (m) k.appendChild(m);
-    var d = prow('אבא', c.dad, c.dadPhone, c.name); if (d) k.appendChild(d);
-    if (c.address) { var a = el('div', 'addr'); a.appendChild(document.createTextNode('כתובת: ' + c.address + '  ')); var w = el('a', null, 'ניווט'); w.href = waze(c.address + ' ראשון לציון'); w.target = '_blank'; w.rel = 'noopener'; a.appendChild(w); k.appendChild(a); }
+    var g = el('div', 'pgrid'); g.appendChild(pcell('אמא', c.mom, c.momPhone)); g.appendChild(pcell('אבא', c.dad, c.dadPhone)); k.appendChild(g);
     box.appendChild(k);
   });
   if (!box.children.length) box.appendChild(el('div', 'empty', 'לא נמצאו תוצאות.'));
 }
+
 var CODE = 'b21ac6b82e', contactsLoaded = false;
 function loadContacts() {
   if (contactsLoaded) return;
