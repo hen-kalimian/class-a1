@@ -27,8 +27,8 @@ header{padding:20px 0 6px;text-align:center}
 .dots{height:10px;margin:10px auto 0;max-width:260px;background:radial-gradient(circle,#FBC5D6 4px,transparent 5px) 0 0/22px 10px repeat-x}
 .card{background:linear-gradient(180deg,#fff 0,#FFF9FB 100%)}
 .gifti{height:34px;width:auto;vertical-align:middle;margin-inline-start:6px}
-.card .cakeico{position:absolute;left:12px;bottom:8px;height:44px;width:auto;opacity:.95;pointer-events:none}
-.card.past .cakeico{opacity:.35;filter:grayscale(.4)}
+.card .cakeico{height:34px;width:auto;flex:none}
+.card.past .cakeico{opacity:.4;filter:grayscale(.4)}
 @media (max-width:560px){.hero{flex-wrap:nowrap;gap:8px}.hero .ttl{padding-bottom:2px;min-width:0}.hero .ttl h1{font-size:42px}.hero .sub{font-size:13px}.hero img{height:64px}.hero img.mid{height:72px}header{padding-top:12px}}
 h1{margin:0;font-size:54px;line-height:1.05;font-weight:800;color:var(--deep)}
 .sub{margin:6px 0 0;color:var(--muted);font-size:15px}
@@ -119,6 +119,23 @@ table.sched{width:100%;border-collapse:collapse;table-layout:fixed;background:#f
 .sched thead th.today{background:var(--fuchsia);color:#fff;box-shadow:none}
 .palette{display:block;height:54px;width:auto;margin:10px auto 0}
 @media (max-width:420px){.sched td.long{font-size:10px;letter-spacing:-.2px;word-break:normal;overflow-wrap:normal;padding-inline:0}.sch{padding:12px 4px}.sched th,.sched td{font-size:11.5px;padding:5px 1px;height:46px}.sched thead th{font-size:11.5px}.sched th.hr{width:28px}.schhead img{height:50px}.schhead h2{font-size:18px}}
+
+.calbox{background:var(--card);border:2px solid var(--pink);border-radius:16px;padding:0 14px;margin:4px 0 10px}
+.calbox summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--deep);padding:10px 0;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.calbox summary::-webkit-details-marker{display:none}
+.calbox summary::after,.psum::after{content:"";width:8px;height:8px;border-right:2px solid var(--deep);border-bottom:2px solid var(--deep);transform:rotate(45deg);margin:-4px 4px 0;flex:none;transition:transform .15s}
+.calbox[open] summary::after,details.card[open] .psum::after{transform:rotate(-135deg);margin-top:4px}
+.calbox p{margin:0 0 6px;color:var(--muted);font-size:14px}
+.calbox .btns{margin:6px 0 12px}
+.list{gap:8px}
+details.card,details.card.past{padding:0 14px}
+details.card .psum{padding:9px 0;min-height:56px}
+.psum .tx{flex:1;min-width:0}
+.psum .who{display:block;font-size:16px;line-height:1.25}
+.psum .pd{display:block;color:var(--muted);font-size:13px;margin-top:1px}
+.psum .badge{font-size:12px;padding:2px 10px}
+details.card[open] .cbody{display:grid;gap:6px;padding:2px 0 12px;border-top:1px solid var(--line);padding-top:10px}
+details.card.past .psum .who{color:#7C7690}
 </style>
 </head>
 <body>
@@ -138,15 +155,14 @@ table.sched{width:100%;border-collapse:collapse;table-layout:fixed;background:#f
   </div>
 
   <section class="panel on" id="p1">
-    <div class="box">
-      <h2>חיבור ליומן</h2>
-      <p>לוחצים פעם אחת על "ליומן של גוגל" או על "לאייפון ולמק", וכל האירועים של הכיתה נכנסים ליומן. מאותו רגע, כל אירוע שמישהו מוסיף או משנה כאן יופיע ביומן שלכם לבד, בלי ללחוץ שוב (בגוגל זה יכול לקחת כמה שעות).</p>
+    <details class="calbox">
+      <summary>איך מוסיפים את אירועי הכיתה ליומן שלי</summary>
+      <p>לוחצים פעם אחת, וכל האירועים של הכיתה נכנסים ליומן. מאותו רגע כל אירוע חדש או משתנה יופיע ביומן לבד (בגוגל זה יכול לקחת כמה שעות).</p>
       <div class="btns">
         <a class="btn b-pink" id="calGoogle" target="_blank" rel="noopener">ליומן של גוגל</a>
         <a class="btn b-sky" id="calApple">לאייפון ולמק</a>
       </div>
-    </div>
-
+    </details>
 
     <div id="listWrap">
       <div class="empty" id="loading">טוענים את האירועים...</div>
@@ -265,6 +281,7 @@ function whenText(it) {
   var s = startOf(it), day = s.toLocaleDateString('he-IL', { weekday: 'long' });
   return day + ', ' + pad(s.getDate()) + '.' + pad(s.getMonth() + 1) + '.' + s.getFullYear() + (it.time ? ' בשעה ' + it.time : ' (השעה עדיין לא ידועה)');
 }
+function shortWhen(it) { var s = startOf(it); return s.toLocaleDateString('he-IL', { weekday: 'long' }) + ', ' + shortDate(it) + (it.time ? ' · ' + it.time : ''); }
 function shortDate(it) { var s = startOf(it); return pad(s.getDate()) + '.' + pad(s.getMonth() + 1); }
 function firstName(k) { return String(k).split(' ')[0]; }
 // תאימות לאחור: "נועם ועומרי חוגגים יחד." בתחילת ההערות
@@ -333,18 +350,12 @@ function render() {
       var ed = el('a', 'editlink', 'עריכה'); ed.href = '#'; ed.addEventListener('click', function (e) { e.preventDefault(); openForm(it); }); L.appendChild(ed);
       body.appendChild(L);
     }
-    var c;
-    if (past) {
-      c = el('details', 'card past');
-      var sm = el('summary', 'psum');
-      sm.appendChild(el('span', 'who', it.title)); sm.appendChild(el('span', 'pd', shortDate(it))); sm.appendChild(b);
-      c.appendChild(sm); c.appendChild(body);
-    } else {
-      c = el('div', 'card');
-      var top = el('div', 'top'); top.appendChild(el('div', 'who', it.title)); top.appendChild(b); c.appendChild(top);
-      while (body.firstChild) c.appendChild(body.firstChild);
-      var ic = el('img', 'cakeico'); ic.src = 'art/' + (it.type === 'bday' ? 'cake' : it.type === 'school' ? 'book' : 'balloons') + '.png'; ic.alt = ''; c.appendChild(ic);
-    }
+    var c = el('details', 'card' + (past ? ' past' : ''));
+    var sm = el('summary', 'psum');
+    var ic = el('img', 'cakeico'); ic.src = 'art/' + (it.type === 'bday' ? 'cake' : it.type === 'school' ? 'book' : 'balloons') + '.png'; ic.alt = '';
+    var tx = el('span', 'tx'); tx.appendChild(el('span', 'who', it.type === 'bday' ? it.title : it.kid)); tx.appendChild(el('span', 'pd', (it.type === 'school' ? 'בית ספרי · ' : it.type === 'class' ? 'כיתתי · ' : '') + shortWhen(it)));
+    sm.appendChild(ic); sm.appendChild(tx); sm.appendChild(b);
+    c.appendChild(sm); c.appendChild(body);
     list.appendChild(c);
   });
 }
