@@ -159,6 +159,9 @@ input,select,textarea{border-color:#DCD7E5}
 .tabs{background:#FBF9FB}
 body{background:#FBF9FB radial-gradient(circle at 12% 8%,#FDEFF3 0,transparent 36%),radial-gradient(circle at 92% 4%,#EAF3FB 0,transparent 34%)}
 .calbox[open] summary::after,details.card[open] .psum::after{transform:rotate(225deg);margin-top:4px}
+.seg{display:flex;gap:6px;margin:4px 0 10px}
+.segb{flex:1;border:1.5px solid #E3DDEA;background:#fff;color:var(--muted);border-radius:999px;padding:7px 6px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.segb.on{background:#EFEAF5;color:var(--text);border-color:#CFC7DC}
 </style>
 </head>
 <body>
@@ -187,9 +190,14 @@ body{background:#FBF9FB radial-gradient(circle at 12% 8%,#FDEFF3 0,transparent 3
       </div>
     </details>
 
+    <div class="seg" role="tablist">
+      <button type="button" class="segb on" id="sgUp" data-w="up">קרובים</button>
+      <button type="button" class="segb" id="sgPast" data-w="past">אירועים קודמים</button>
+    </div>
     <div id="listWrap">
       <div class="empty" id="loading">טוענים את האירועים...</div>
       <div class="list" id="list"></div>
+      <div class="list" id="listPast" style="display:none"></div>
     </div>
 
     <div class="btns" style="margin-top:16px"><button class="btn b-pink" type="button" id="addBtn">הוספת אירוע</button></div>
@@ -319,7 +327,7 @@ function namesOf(it) {
 function cleanNotes(it) { return String(it.notes || '').replace(JOINT_RE, '').trim(); }
 function titleOf(it) {
   if (it.type !== 'bday') return TYPE_LABEL[it.type] + ': ' + it.kid;
-  return 'יום הולדת ' + it.names.join(' ו');
+  return 'יום הולדת ' + it.names.map(function (n) { return 'ל' + n; }).join(' ו');
 }
 // אותה מסיבה שהוזנה כמה פעמים (אותו תאריך, שעה ומקום) הופכת לכרטיס אחד עם כל החוגגים
 function prepare(items) {
@@ -347,12 +355,13 @@ function gcal(it) {
 }
 function waze(q) { return 'https://waze.com/ul?q=' + encodeURIComponent(q) + '&navigate=yes'; }
 function render() {
-  var list = $('list'); list.textContent = '';
+  var listUp = $('list'), listPast = $('listPast'); listUp.textContent = ''; listPast.textContent = '';
   var now = Date.now();
   var items = prepare(ITEMS).sort(function (a, b) { return startOf(a) - startOf(b); });
   var isPast = function (it) { return (startOf(it).getTime() + 2 * 3600e3) < now; };
   items = items.filter(function (x) { return !isPast(x); }).concat(items.filter(isPast).reverse());
-  if (!items.length) list.appendChild(el('div', 'empty', 'עוד לא הוזן אף אירוע. אפשר להיות הראשונים.'));
+  if (!items.filter(function (x) { return !isPast(x); }).length) listUp.appendChild(el('div', 'empty', 'אין אירועים קרובים. אפשר להוסיף אירוע בכפתור למטה.'));
+  if (!items.filter(isPast).length) listPast.appendChild(el('div', 'empty', 'עוד אין אירועים קודמים.'));
   items.forEach(function (it) {
     var s = startOf(it), past = isPast(it);
     var days = Math.floor((new Date(s.getFullYear(), s.getMonth(), s.getDate()) - new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())) / 86400e3);
@@ -379,7 +388,7 @@ function render() {
     var tx = el('span', 'tx'); tx.appendChild(el('span', 'who', it.type === 'bday' ? it.title : it.kid)); tx.appendChild(el('span', 'pd', (it.type === 'school' ? 'בית ספרי · ' : it.type === 'class' ? 'כיתתי · ' : '') + shortWhen(it)));
     sm.appendChild(ic); sm.appendChild(tx); sm.appendChild(b);
     c.appendChild(sm); c.appendChild(body);
-    list.appendChild(c);
+    (past ? listPast : listUp).appendChild(c);
   });
 }
 function fillSel(sel, first) {
@@ -443,6 +452,13 @@ $('f').addEventListener('submit', function (e) {
     })
     .catch(function () { m.className = 'msg err'; m.textContent = 'לא הצלחנו לשלוח. נסו שוב.'; })
     .then(function () { btn.disabled = false; btn.textContent = EDITING ? 'שמירת שינויים' : 'שליחה'; });
+});
+document.querySelectorAll('.segb').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var up = b.dataset.w === 'up';
+    $('list').style.display = up ? '' : 'none'; $('listPast').style.display = up ? 'none' : '';
+    $('sgUp').classList.toggle('on', up); $('sgPast').classList.toggle('on', !up);
+  });
 });
 loadList();
 
