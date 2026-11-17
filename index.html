@@ -343,7 +343,7 @@ function render() {
       c = el('div', 'card');
       var top = el('div', 'top'); top.appendChild(el('div', 'who', it.title)); top.appendChild(b); c.appendChild(top);
       while (body.firstChild) c.appendChild(body.firstChild);
-      var ic = el('img', 'cakeico'); ic.src = 'art/' + (it.type === 'bday' ? 'cake' : it.type === 'school' ? 'gift' : 'balloons') + '.png'; ic.alt = ''; c.appendChild(ic);
+      var ic = el('img', 'cakeico'); ic.src = 'art/' + (it.type === 'bday' ? 'cake' : it.type === 'school' ? 'book' : 'balloons') + '.png'; ic.alt = ''; c.appendChild(ic);
     }
     list.appendChild(c);
   });
