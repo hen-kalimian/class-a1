@@ -136,6 +136,29 @@ details.card .psum{padding:9px 0;min-height:56px}
 .psum .badge{font-size:12px;padding:2px 10px}
 details.card[open] .cbody{display:grid;gap:6px;padding:2px 0 12px;border-top:1px solid var(--line);padding-top:10px}
 details.card.past .psum .who{color:#7C7690}
+
+/* גרסה רגועה: פחות ורוד, כהה ומנטה בכרטיסים */
+.card,details.card{border:1.5px solid #E8E4EE;background:#fff}
+.card .who,.psum .who{color:var(--text)}
+.calbox{border:1.5px solid #E8E4EE}
+.calbox summary{color:var(--text)}
+.calbox summary::after,.psum::after{border-color:var(--muted)}
+.links a{background:#fff;border:1.5px solid #D9D4E2;color:var(--text)}
+.links a.editlink{background:#fff;border:1.5px solid #D9D4E2}
+details.card[open] .cbody{border-top-color:#EEEAF2}
+.card.past,details.card.past{background:#F6F3F7;border-color:#E6E1EC}
+.box{border-color:#E8E4EE}
+.dots{opacity:.6}
+.tab{border-color:#E3DDEA;color:var(--text)}
+.tab[aria-selected=true]{color:#fff}
+.ccard{border:1.5px solid #E8E4EE}
+.ccard .who{color:var(--text)}
+.pcell,.prow{background:#F7F5FA}
+input,select,textarea{border-color:#DCD7E5}
+.search{border-color:#DCD7E5}
+.tabs{background:#FBF9FB}
+body{background:#FBF9FB radial-gradient(circle at 12% 8%,#FDEFF3 0,transparent 36%),radial-gradient(circle at 92% 4%,#EAF3FB 0,transparent 34%)}
+.calbox[open] summary::after,details.card[open] .psum::after{transform:rotate(225deg);margin-top:4px}
 </style>
 </head>
 <body>
@@ -156,10 +179,10 @@ details.card.past .psum .who{color:#7C7690}
 
   <section class="panel on" id="p1">
     <details class="calbox">
-      <summary>איך מוסיפים את אירועי הכיתה ליומן שלי</summary>
+      <summary>הוספה ליומן שלי</summary>
       <p>לוחצים פעם אחת, וכל האירועים של הכיתה נכנסים ליומן. מאותו רגע כל אירוע חדש או משתנה יופיע ביומן לבד (בגוגל זה יכול לקחת כמה שעות).</p>
       <div class="btns">
-        <a class="btn b-pink" id="calGoogle" target="_blank" rel="noopener">ליומן של גוגל</a>
+        <a class="btn b-mint" id="calGoogle" target="_blank" rel="noopener">ליומן של גוגל</a>
         <a class="btn b-sky" id="calApple">לאייפון ולמק</a>
       </div>
     </details>
