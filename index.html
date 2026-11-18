@@ -162,6 +162,8 @@ body{background:#FBF9FB radial-gradient(circle at 12% 8%,#FDEFF3 0,transparent 3
 .seg{display:flex;gap:6px;margin:4px 0 10px}
 .segb{flex:1;border:1.5px solid #E3DDEA;background:#fff;color:var(--muted);border-radius:999px;padding:7px 6px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
 .segb.on{background:#EFEAF5;color:var(--text);border-color:#CFC7DC}
+.psum .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+.psum .tag{background:#FFF1D6;color:#8A5A00;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:700}
 </style>
 </head>
 <body>
@@ -324,6 +326,13 @@ function namesOf(it) {
   if (m) return m[1].split(/\s+ו/).map(function (x) { return x.replace(/^ו/, ''); });
   return [firstName(it.kid)];
 }
+function tagsOf(it) {
+  var n = String(it.notes || ''), t = [];
+  if (/רק בנים|לבנים בלבד|בנים בלבד/.test(n)) t.push('רק בנים');
+  if (/רק בנות|לבנות בלבד|בנות בלבד/.test(n)) t.push('רק בנות');
+  if (/ללא הורים|בלי הורים/.test(n)) t.push('ללא הורים');
+  return t;
+}
 function cleanNotes(it) { return String(it.notes || '').replace(JOINT_RE, '').trim(); }
 function titleOf(it) {
   if (it.type !== 'bday') return TYPE_LABEL[it.type] + ': ' + it.kid;
@@ -351,7 +360,7 @@ function prepare(items) {
 function gcal(it) {
   var s = startOf(it), e = new Date(s.getTime() + 2 * 3600e3), f = function (d) { return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + 'T' + pad(d.getHours()) + pad(d.getMinutes()) + '00'; };
   var dates = it.time ? f(s) + '/' + f(e) : f(s).slice(0, 8) + '/' + f(new Date(s.getTime() + 86400e3)).slice(0, 8);
-  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(it.title) + '&dates=' + dates + '&ctz=Asia/Jerusalem&location=' + encodeURIComponent(it.place || '') + '&details=' + encodeURIComponent(it.notesC || '');
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(it.title) + '&dates=' + dates + '&ctz=Asia/Jerusalem&location=' + encodeURIComponent(it.place || '') + '&details=' + encodeURIComponent([it.notesC || '', it.place ? 'מקום: ' + it.place : '', it.parent ? 'עודכן על ידי ' + it.parent : ''].filter(Boolean).join(String.fromCharCode(10)));
 }
 function waze(q) { return 'https://waze.com/ul?q=' + encodeURIComponent(q) + '&navigate=yes'; }
 function render() {
@@ -385,7 +394,9 @@ function render() {
     var c = el('details', 'card' + (past ? ' past' : ''));
     var sm = el('summary', 'psum');
     var ic = el('img', 'cakeico'); ic.src = 'art/' + (it.type === 'bday' ? 'cake' : it.type === 'school' ? 'book' : 'balloons') + '.png'; ic.alt = '';
-    var tx = el('span', 'tx'); tx.appendChild(el('span', 'who', it.type === 'bday' ? it.title : it.kid)); tx.appendChild(el('span', 'pd', (it.type === 'school' ? 'בית ספרי · ' : it.type === 'class' ? 'כיתתי · ' : '') + shortWhen(it)));
+    var tx = el('span', 'tx'); tx.appendChild(el('span', 'who', it.type === 'bday' ? it.title : it.kid));
+    var tg = tagsOf(it); tx.appendChild(el('span', 'pd', (it.type === 'school' ? 'בית ספרי · ' : it.type === 'class' ? 'כיתתי · ' : '') + shortWhen(it)));
+    if (tg.length) { var tl = el('span', 'tags'); tg.forEach(function (x) { tl.appendChild(el('span', 'tag', x)); }); tx.appendChild(tl); }
     sm.appendChild(ic); sm.appendChild(tx); sm.appendChild(b);
     c.appendChild(sm); c.appendChild(body);
     (past ? listPast : listUp).appendChild(c);
