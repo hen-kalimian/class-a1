@@ -164,6 +164,30 @@ body{background:#FBF9FB radial-gradient(circle at 12% 8%,#FDEFF3 0,transparent 3
 .segb.on{background:#EFEAF5;color:var(--text);border-color:#CFC7DC}
 .psum .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
 .psum .tag{background:#FFF1D6;color:#8A5A00;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:700}
+
+.tag.tg-g,.cchip.tg-g{background:#CDEFE2;color:#1F5E4B}
+.tag.tg-b,.cchip.tg-b{background:#DDEEFB;color:#2B5C86}
+.tag.tg-p,.cchip.tg-p{background:#FDE1EA;color:#B8236B}
+.cal{background:#fff;border:1.5px solid #E8E4EE;border-radius:18px;padding:10px 6px 8px;margin:4px 0 12px}
+.calhead{display:flex;align-items:center;justify-content:space-between;padding:0 4px 8px}
+.calttl{font-weight:800;font-size:18px;color:var(--text)}
+.calnav{border:1.5px solid #DCD7E5;background:#fff;color:var(--text);width:36px;height:36px;border-radius:50%;font-size:22px;line-height:1;cursor:pointer}
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;touch-action:pan-y}
+.cdh{text-align:center;font-size:12px;font-weight:700;color:var(--muted);padding:2px 0 4px}
+.cday{min-height:78px;border-radius:8px;background:#FAF8FC;padding:2px;display:flex;flex-direction:column;gap:2px;cursor:pointer;min-width:0;overflow:hidden}
+.cday.out{background:transparent;opacity:.45}
+.cday.today{box-shadow:inset 0 0 0 2px #9A8FB5}
+.cday.sel{background:#EFEAF5}
+.cday .dn{font-size:12px;font-weight:700;color:var(--text);text-align:center;line-height:1.2}
+.cchip{display:block;font-size:10px;line-height:1.25;border-radius:5px;padding:1px 3px;background:#ECE7F3;color:var(--text);white-space:normal;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word;font-weight:600}
+.cchip.pastc{opacity:.55}
+.cmore{font-size:10px;color:var(--muted);text-align:center}
+.calday{margin-top:8px}
+.calday .dayt{font-weight:800;font-size:15px;color:var(--text);padding:2px 6px 6px}
+.calday .list{margin:0 4px}
+.calkey{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+.calkey .tag{border-radius:999px;padding:1px 9px;font-size:12px;font-weight:700}
+@media (min-width:600px){.cchip{font-size:12px}.cday{min-height:84px}}
 </style>
 </head>
 <body>
@@ -192,6 +216,16 @@ body{background:#FBF9FB radial-gradient(circle at 12% 8%,#FDEFF3 0,transparent 3
       </div>
     </details>
 
+    <div class="cal" id="cal">
+      <div class="calhead">
+        <button type="button" class="calnav" id="calNext" aria-label="חודש קודם">&#8250;</button>
+        <div class="calttl" id="calTtl"></div>
+        <button type="button" class="calnav" id="calPrev" aria-label="חודש הבא">&#8249;</button>
+      </div>
+      <div class="calgrid" id="calGrid"></div>
+      <div class="calday" id="calDay"></div>
+      <div class="calkey"><span class="tag tg-g">ללא הורים</span><span class="tag tg-b">רק בנים</span><span class="tag tg-p">רק בנות</span></div>
+    </div>
     <div class="seg" role="tablist">
       <button type="button" class="segb on" id="sgUp" data-w="up">קרובים</button>
       <button type="button" class="segb" id="sgPast" data-w="past">אירועים קודמים</button>
@@ -333,6 +367,7 @@ function tagsOf(it) {
   if (/ללא הורים|בלי הורים/.test(n)) t.push('ללא הורים');
   return t;
 }
+function tagCls(x) { return x === 'ללא הורים' ? 'tg-g' : x === 'רק בנים' ? 'tg-b' : 'tg-p'; }
 function cleanNotes(it) { return String(it.notes || '').replace(JOINT_RE, '').trim(); }
 function titleOf(it) {
   if (it.type !== 'bday') return TYPE_LABEL[it.type] + ': ' + it.kid;
@@ -363,16 +398,8 @@ function gcal(it) {
   return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(it.title) + '&dates=' + dates + '&ctz=Asia/Jerusalem&location=' + encodeURIComponent(it.place || '') + '&details=' + encodeURIComponent([it.notesC || '', it.place ? 'מקום: ' + it.place : '', it.parent ? 'עודכן על ידי ' + it.parent : ''].filter(Boolean).join(String.fromCharCode(10)));
 }
 function waze(q) { return 'https://waze.com/ul?q=' + encodeURIComponent(q) + '&navigate=yes'; }
-function render() {
-  var listUp = $('list'), listPast = $('listPast'); listUp.textContent = ''; listPast.textContent = '';
-  var now = Date.now();
-  var items = prepare(ITEMS).sort(function (a, b) { return startOf(a) - startOf(b); });
-  var isPast = function (it) { return (startOf(it).getTime() + 2 * 3600e3) < now; };
-  items = items.filter(function (x) { return !isPast(x); }).concat(items.filter(isPast).reverse());
-  if (!items.filter(function (x) { return !isPast(x); }).length) listUp.appendChild(el('div', 'empty', 'אין אירועים קרובים. אפשר להוסיף אירוע בכפתור למטה.'));
-  if (!items.filter(isPast).length) listPast.appendChild(el('div', 'empty', 'עוד אין אירועים קודמים.'));
-  items.forEach(function (it) {
-    var s = startOf(it), past = isPast(it);
+function buildCard(it, past) {
+    var s = startOf(it);
     var days = Math.floor((new Date(s.getFullYear(), s.getMonth(), s.getDate()) - new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())) / 86400e3);
     var b;
     if (past) b = el('span', 'badge bd-past', 'חלף');
@@ -396,11 +423,24 @@ function render() {
     var ic = el('img', 'cakeico'); ic.src = 'art/' + (it.type === 'bday' ? 'cake' : it.type === 'school' ? 'book' : 'balloons') + '.png'; ic.alt = '';
     var tx = el('span', 'tx'); tx.appendChild(el('span', 'who', it.type === 'bday' ? it.title : it.kid));
     var tg = tagsOf(it); tx.appendChild(el('span', 'pd', (it.type === 'school' ? 'בית ספרי · ' : it.type === 'class' ? 'כיתתי · ' : '') + shortWhen(it)));
-    if (tg.length) { var tl = el('span', 'tags'); tg.forEach(function (x) { tl.appendChild(el('span', 'tag', x)); }); tx.appendChild(tl); }
+    if (tg.length) { var tl = el('span', 'tags'); tg.forEach(function (x) { tl.appendChild(el('span', 'tag ' + tagCls(x), x)); }); tx.appendChild(tl); }
     sm.appendChild(ic); sm.appendChild(tx); sm.appendChild(b);
     c.appendChild(sm); c.appendChild(body);
-    (past ? listPast : listUp).appendChild(c);
+    return c;
+}
+function render() {
+  var listUp = $('list'), listPast = $('listPast'); listUp.textContent = ''; listPast.textContent = '';
+  var now = Date.now();
+  var items = prepare(ITEMS).sort(function (a, b) { return startOf(a) - startOf(b); });
+  var isPast = function (it) { return (startOf(it).getTime() + 2 * 3600e3) < now; };
+  items = items.filter(function (x) { return !isPast(x); }).concat(items.filter(isPast).reverse());
+  if (!items.filter(function (x) { return !isPast(x); }).length) listUp.appendChild(el('div', 'empty', 'אין אירועים קרובים. אפשר להוסיף אירוע בכפתור למטה.'));
+  if (!items.filter(isPast).length) listPast.appendChild(el('div', 'empty', 'עוד אין אירועים קודמים.'));
+  items.forEach(function (it) {
+    var past = isPast(it);
+    (past ? listPast : listUp).appendChild(buildCard(it, past));
   });
+  ALL = items; renderCal();
 }
 function fillSel(sel, first) {
   var cur = sel.value; sel.textContent = '';
@@ -415,6 +455,52 @@ function loadList() {
     $('loading').style.display = 'none'; render();
   }).catch(function () { $('loading').textContent = 'לא הצלחנו לטעון. נסו לרענן את הדף.'; });
 }
+var ALL = [], CAL = new Date(), SELD = null;
+CAL = new Date(CAL.getFullYear(), CAL.getMonth(), 1);
+var HEB_M = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function chipLabel(it) { return it.type === 'bday' ? it.names.join(' ו') : it.kid; }
+function renderCal() {
+  var g = $('calGrid'); g.textContent = '';
+  $('calTtl').textContent = HEB_M[CAL.getMonth()] + ' ' + CAL.getFullYear();
+  ['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'].forEach(function (n) { g.appendChild(el('div', 'cdh', n)); });
+  var first = new Date(CAL.getFullYear(), CAL.getMonth(), 1), start = new Date(first.getFullYear(), first.getMonth(), 1 - first.getDay());
+  var last = new Date(CAL.getFullYear(), CAL.getMonth() + 1, 0), weeks = Math.ceil((first.getDay() + last.getDate()) / 7);
+  var by = {}; ALL.forEach(function (it) { (by[it.date] = by[it.date] || []).push(it); });
+  var todayK = ymd(new Date()), now = Date.now();
+  for (var i = 0; i < weeks * 7; i++) {
+    var d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i), k = ymd(d), evs = by[k] || [];
+    var c = el('div', 'cday' + (d.getMonth() !== CAL.getMonth() ? ' out' : '') + (k === todayK ? ' today' : '') + (k === SELD ? ' sel' : ''));
+    c.appendChild(el('div', 'dn', String(d.getDate())));
+    evs.slice(0, 3).forEach(function (it) {
+      var tg = tagsOf(it), past = (startOf(it).getTime() + 2 * 3600e3) < now;
+      c.appendChild(el('span', 'cchip' + (tg.length ? ' ' + tagCls(tg[0]) : '') + (past ? ' pastc' : ''), chipLabel(it)));
+    });
+    if (evs.length > 3) c.appendChild(el('div', 'cmore', '+' + (evs.length - 3)));
+    (function (key, has) { c.addEventListener('click', function () { SELD = (SELD === key && has) ? null : key; renderCal(); }); })(k, evs.length > 0);
+    g.appendChild(c);
+  }
+  var dp = $('calDay'); dp.textContent = '';
+  if (SELD && by[SELD] && by[SELD].length) {
+    var dd = SELD.split('-'), dt = new Date(+dd[0], +dd[1] - 1, +dd[2]);
+    dp.appendChild(el('div', 'dayt', dt.toLocaleDateString('he-IL', { weekday: 'long' }) + ', ' + pad(dt.getDate()) + '.' + pad(dt.getMonth() + 1) + '.' + dt.getFullYear()));
+    var L2 = el('div', 'list');
+    by[SELD].forEach(function (it) { var past = (startOf(it).getTime() + 2 * 3600e3) < now; var cc = buildCard(it, past); cc.open = true; L2.appendChild(cc); });
+    dp.appendChild(L2);
+  }
+}
+function calMove(n) { CAL = new Date(CAL.getFullYear(), CAL.getMonth() + n, 1); SELD = null; renderCal(); }
+$('calNext').addEventListener('click', function () { calMove(-1); });
+$('calPrev').addEventListener('click', function () { calMove(1); });
+(function () {
+  var x0 = null, y0 = null, gr = $('cal');
+  gr.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+  gr.addEventListener('touchend', function (e) {
+    if (x0 === null) return; var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) calMove(dx > 0 ? -1 : 1);
+  }, { passive: true });
+})();
+
 var EDITING = null;
 function lockFields(on) { ['type', 'kid', 'kid2', 'evTitle'].forEach(function (id) { $(id).disabled = on; }); }
 function closeForm() { $('addBox').style.display = 'none'; $('addBtn').textContent = 'הוספת אירוע'; EDITING = null; }
