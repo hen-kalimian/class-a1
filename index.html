@@ -121,12 +121,14 @@ table.sched{width:100%;border-collapse:collapse;table-layout:fixed;background:#f
 @media (max-width:420px){.sched td.long{font-size:10px;letter-spacing:-.2px;word-break:normal;overflow-wrap:normal;padding-inline:0}.sch{padding:12px 4px}.sched th,.sched td{font-size:11.5px;padding:5px 1px;height:46px}.sched thead th{font-size:11.5px}.sched th.hr{width:28px}.schhead img{height:50px}.schhead h2{font-size:18px}}
 
 .calbox{background:var(--card);border:2px solid var(--pink);border-radius:16px;padding:0 14px;margin:4px 0 10px}
-.calbox summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--deep);padding:10px 0;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.calbox summary::-webkit-details-marker{display:none}
-.calbox summary::after,.psum::after{content:"";width:8px;height:8px;border-right:2px solid var(--deep);border-bottom:2px solid var(--deep);transform:rotate(45deg);margin:-4px 4px 0;flex:none;transition:transform .15s}
-.calbox[open] summary::after,details.card[open] .psum::after{transform:rotate(-135deg);margin-top:4px}
+.calbox > summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--deep);padding:10px 0;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.calbox > summary::-webkit-details-marker{display:none}
+.calbox > summary::after,.psum::after{content:"";width:8px;height:8px;border-right:2px solid var(--deep);border-bottom:2px solid var(--deep);transform:rotate(45deg);margin:-4px 4px 0;flex:none;transition:transform .15s}
+.calbox[open] > summary::after,details.card[open] .psum::after{transform:rotate(-135deg);margin-top:4px}
 .calbox p{margin:0 0 6px;color:var(--muted);font-size:14px}
 .calbox .btns{margin:6px 0 12px}
+.pastbox{margin:10px 0 0}
+.pastbox > summary{color:var(--muted)}
 .list{gap:8px}
 details.card,details.card.past{padding:0 14px}
 details.card .psum{padding:9px 0;min-height:56px}
@@ -141,8 +143,8 @@ details.card.past .psum .who{color:#7C7690}
 .card,details.card{border:1.5px solid #E8E4EE;background:#fff}
 .card .who,.psum .who{color:var(--text)}
 .calbox{border:1.5px solid #E8E4EE}
-.calbox summary{color:var(--text)}
-.calbox summary::after,.psum::after{border-color:var(--muted)}
+.calbox > summary{color:var(--text)}
+.calbox > summary::after,.psum::after{border-color:var(--muted)}
 .links a{background:#fff;border:1.5px solid #D9D4E2;color:var(--text)}
 .links a.editlink{background:#fff;border:1.5px solid #D9D4E2}
 details.card[open] .cbody{border-top-color:#EEEAF2}
@@ -158,7 +160,7 @@ input,select,textarea{border-color:#DCD7E5}
 .search{border-color:#DCD7E5}
 .tabs{background:#FBF9FB}
 body{background:#FBF9FB radial-gradient(circle at 12% 8%,#FDEFF3 0,transparent 36%),radial-gradient(circle at 92% 4%,#EAF3FB 0,transparent 34%)}
-.calbox[open] summary::after,details.card[open] .psum::after{transform:rotate(225deg);margin-top:4px}
+.calbox[open] > summary::after,details.card[open] .psum::after{transform:rotate(225deg);margin-top:4px}
 .seg{display:flex;gap:6px;margin:4px 0 10px}
 .segb{flex:1;border:1.5px solid #E3DDEA;background:#fff;color:var(--muted);border-radius:999px;padding:7px 6px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
 .segb.on{background:#EFEAF5;color:var(--text);border-color:#CFC7DC}
@@ -246,14 +248,13 @@ body{background:#FBF9FB radial-gradient(circle at 12% 8%,#FDEFF3 0,transparent 3
       <div class="calday" id="calDay"></div>
       <div class="calkey"><span class="tag tg-g">ללא הורים</span><span class="tag tg-b">רק בנים</span><span class="tag tg-p">רק בנות</span></div>
     </div>
-    <div class="seg" role="tablist">
-      <button type="button" class="segb on" id="sgUp" data-w="up">קרובים</button>
-      <button type="button" class="segb" id="sgPast" data-w="past">אירועים קודמים</button>
-    </div>
     <div id="listWrap">
       <div class="empty" id="loading">טוענים את האירועים...</div>
       <div class="list" id="list"></div>
-      <div class="list" id="listPast" style="display:none"></div>
+      <details class="calbox pastbox">
+        <summary>אירועים קודמים</summary>
+        <div class="list" id="listPast" style="margin:0 0 12px"></div>
+      </details>
     </div>
 
     <div class="btns" style="margin-top:16px"><button class="btn b-pink" type="button" id="addBtn">הוספת אירוע</button></div>
@@ -575,13 +576,6 @@ $('f').addEventListener('submit', function (e) {
     })
     .catch(function () { m.className = 'msg err'; m.textContent = 'לא הצלחנו לשלוח. נסו שוב.'; })
     .then(function () { btn.disabled = false; btn.textContent = EDITING ? 'שמירת שינויים' : 'שליחה'; });
-});
-document.querySelectorAll('.segb').forEach(function (b) {
-  b.addEventListener('click', function () {
-    var up = b.dataset.w === 'up';
-    $('list').style.display = up ? '' : 'none'; $('listPast').style.display = up ? 'none' : '';
-    $('sgUp').classList.toggle('on', up); $('sgPast').classList.toggle('on', !up);
-  });
 });
 loadList();
 
